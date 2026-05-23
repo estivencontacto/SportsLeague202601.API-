@@ -1,176 +1,186 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using SportsLeague.API.DTOs.Request;
 using SportsLeague.API.DTOs.Response;
 using SportsLeague.Domain.Entities;
 using SportsLeague.Domain.Interfaces.Services;
 
+
 namespace SportsLeague.API.Controllers
 {
-    // Controlador REST para manejar Sponsors
     [ApiController]
-    [Route("api/sponsors")]
-    public class SponsorController : ControllerBase
+    [Route("api/[Controller])")]
+    public class SponsorController : ControllerBase//creo la clase controlador 
     {
-        private readonly ISponsorService _service;
+        private readonly ISponsorService _sponsorService;//hago el enlace con el isponsor
         private readonly IMapper _mapper;
 
-        public SponsorController(ISponsorService service, IMapper mapper)
+
+        public SponsorController(//inyecto todo lo necesario para el buen funcionamiento 
+
+        ISponsorService sponsorService,
+        IMapper mapper)
         {
-            _service = service;
+            _sponsorService = sponsorService;
             _mapper = mapper;
-        }
 
-        // =========================
-        // GET ALL SPONSORS
-        // =========================
+        }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SponsorResponseDTO>>> GetSponsors()
+        public async Task<ActionResult<IEnumerable<SponsorResponseDTO>>> GetAll()//consigo todos los sponsors registrados 
+
         {
-            var data = await _service.GetAllAsync();
-            var response = _mapper.Map<IEnumerable<SponsorResponseDTO>>(data);
-
-            return Ok(response);
+            var sponsor = await _sponsorService.GetAllAsync();//hace la consulta del metodo desde sponsorservice
+            return Ok(_mapper.Map<IEnumerable<SponsorResponseDTO>>(sponsor));//te devuelve lo que te deberia mostrar el response del dto
         }
-
-        // =========================
-        // GET SPONSOR BY ID
-        // =========================
         [HttpGet("{id}")]
-        public async Task<ActionResult<SponsorResponseDTO>> GetSponsor(int id)
+        public async Task<ActionResult<SponsorResponseDTO>> GetById(int id)//te permite buscar segun la id
         {
-            var sponsor = await _service.GetByIdAsync(id);
 
-            if (sponsor == null)
-                return NotFound(new { error = $"Sponsor ID {id} not found" });
-
-            return Ok(_mapper.Map<SponsorResponseDTO>(sponsor));
+            var sponsor = await _sponsorService.GetByIdAsync(id);
+            if (sponsor == null)//si no hay una id igul registrada
+                return NotFound(new { message = $"Sponsor con ID {id} no encontrado" });//te salta mensaje 
+            return Ok(_mapper.Map<SponsorResponseDTO>(sponsor));// si si la hay, te muestra la respuesta 
+            
         }
-
-        // =========================
-        // CREATE SPONSOR
-        // =========================
         [HttpPost]
-        public async Task<ActionResult<SponsorResponseDTO>> CreateSponsor(SponsorRequestDTO dto)
+        public async Task<ActionResult<SponsorResponseDTO>> Create(SponsorRequestDTO dto)//crea nuevos sponsors 
         {
             try
+
             {
-                var entity = _mapper.Map<Sponsor>(dto);
+                var sponsor = _mapper.Map<Sponsor>(dto);//guarda todo en una variable
+                var created = await _sponsorService.CreateAsync(sponsor);//recarga todo en el service
+                var responseDto = _mapper.Map<SponsorResponseDTO>(created);
+                return CreatedAtAction(nameof(GetById), new { id = responseDto.Id }, responseDto);//si sale bien permite la creacion
 
-                var created = await _service.AddAsync(entity);
 
-                var result = _mapper.Map<SponsorResponseDTO>(created);
 
-                return CreatedAtAction(nameof(GetSponsor), new { id = result.Id }, result);
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException ex)//en caso de error muestra mensaje 
+
             {
-                return Conflict(new { error = ex.Message });
+
+                return BadRequest(new { ex.Message });
+
             }
+
+
+
         }
 
-        // =========================
-        // UPDATE SPONSOR
-        // =========================
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSponsor(int id, SponsorRequestDTO dto)
+        public async Task<ActionResult<SponsorResponseDTO>> Update(int id, SponsorRequestDTO dto)//permite actualizar 
         {
             try
             {
-                var entity = _mapper.Map<Sponsor>(dto);
+                var sponsor = _mapper.Map<Sponsor>(dto);//guarda todo en la variable
+                await _sponsorService.UpdateAsync(id, sponsor);//hace la consulta desde el service con el metodo 
+                return NoContent();//da la validez de la accion
 
-                await _service.UpdateAsync(id, entity);
 
-                return NoContent();
+
+
+
             }
             catch (KeyNotFoundException ex)
+
             {
-                return NotFound(new { error = ex.Message });
+
+                return NotFound(new { message = ex.Message });
+
+
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(new { error = ex.Message });
-            }
-        }
 
-        // =========================
-        // DELETE SPONSOR
-        // =========================
+                return Conflict(new { message = ex.Message });
+
+
+            }
+
+
+
+
+        }
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSponsor(int id)
+
+        public async Task<ActionResult> Delete(int id)//elimina sponsor por su id
         {
             try
             {
-                await _service.DeleteAsync(id);
-                return NoContent();
+                await _sponsorService.DeleteAsync(id);//realiza la accion por medio del metodo
+                return NoContent();//valida la accion
+                   
+
+
+
             }
-            catch (KeyNotFoundException ex)
+            catch  (KeyNotFoundException ex)
             {
-                return NotFound(new { error = ex.Message });
-            }
-        }
 
-        // =========================
-        // GET TOURNAMENTS BY SPONSOR
-        // =========================
-        [HttpGet("{id}/tournaments")]
-        public async Task<ActionResult<IEnumerable<TournamentSponsorResponseDTO>>> GetTournaments(int id)
-        {
-            try
-            {
-                var data = await _service.GetSponsorTournamentsAsync(id);
+                return NotFound(new { message = ex.Message });
 
-                var response = _mapper.Map<IEnumerable<TournamentSponsorResponseDTO>>(data);
-
-                return Ok(response);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-        }
-
-        // =========================
-        // LINK SPONSOR TO TOURNAMENT
-        // =========================
-        [HttpPost("{id}/tournaments")]
-        public async Task<ActionResult<TournamentSponsorResponseDTO>> AddSponsorToTournament(
-            int id,
-            [FromBody] TournamentSponsorRequestDTO dto)
-        {
-            try
-            {
-                var link = await _service.LinkToTournamentAsync(id, dto.TournamentId, dto.ContractAmount);
-
-                var response = _mapper.Map<TournamentSponsorResponseDTO>(link);
-
-                return CreatedAtAction(nameof(GetTournaments), new { id }, response);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(new { error = ex.Message });
+                return Conflict(new { message = ex.Message });
+
+
             }
+
         }
 
-        // =========================
-        // UNLINK SPONSOR
-        // =========================
-        [HttpDelete("{id}/tournaments/{tournamentId}")]
-        public async Task<IActionResult> RemoveSponsorFromTournament(int id, int tournamentId)
+        [HttpPatch("{id}/Category")]
+        public async Task<ActionResult> UpdateCategoryAsync(int id, SponsorRequestDTO dto)//actualiza la categoria 
         {
             try
             {
-                await _service.UnlinkFromTournamentAsync(id, tournamentId);
-                return NoContent();
+                await _sponsorService.UpdateCategoryAsync(id, dto.Category);//realiza la tarea por medio del metodo 
+                return NoContent();//da validez a la accion
+
             }
+            catch(KeyNotFoundException ex)
+            {
+
+                return NotFound(new { message = ex.Message });
+                
+            }
+            catch(InvalidOperationException ex)
+            {
+
+
+                return Conflict(new { message = ex.Message });
+            }
+
+
+        }
+
+        [HttpPost("{id}/AddTournament")]
+        public async Task <ActionResult> AddtoTounramentAsync(int SponsorId, int TournamentId)//permite asociar un sponsor al torneo 
+        {
+            try
+            {
+                await _sponsorService.AddToTournamentAsync(SponsorId, TournamentId);
+                return NoContent();
+
+
+            } 
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { error = ex.Message });
+                return NotFound(new { message = ex.Message });
+
             }
+            catch(InvalidOperationException ex)
+            {
+
+
+                return Conflict(new { message = ex.Message });
+            }
+
+
+
+
+
         }
     }
 }

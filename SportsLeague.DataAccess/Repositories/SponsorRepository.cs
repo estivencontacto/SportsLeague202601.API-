@@ -1,38 +1,36 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SportsLeague.DataAccess.Context;
 using SportsLeague.Domain.Entities;
+using SportsLeague.Domain.Enums;
 using SportsLeague.Domain.Interfaces.Repositories;
 
 namespace SportsLeague.DataAccess.Repositories
 {
-    // Implementación concreta del repositorio de Sponsor
-    public class SponsorRepository : GenericRepository<Sponsor>, ISponsorRepository
+    public class SponsorRepository : GenericRepository<Sponsor>, ISponsorRepository//creamos la logica de implementacion del repositorio, donde solamente definimos la logica de los metodos propios
     {
         public SponsorRepository(LeagueDbContext context) : base(context)
         {
         }
 
-        // Verifica si ya existe un sponsor con el mismo nombre
-        public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null)
-        {
-            var normalizedName = name.ToLower().Trim();
-
-            var query = _dbSet.AsQueryable();
-
-            // Si estamos actualizando, excluimos el mismo ID
-            if (excludeId.HasValue)
-                query = query.Where(s => s.Id != excludeId.Value);
-
-            return await query.AnyAsync(s => s.Name.ToLower() == normalizedName);
-        }
-
-        // Trae un sponsor junto con los torneos asociados
-        public async Task<Sponsor?> GetSponsorWithTournamentsAsync(int id)
+        public async Task<Sponsor?> ExistByNameAsync(string SponsorName)//Implementamos el metodo que permite ver si hay otro sponsor llamado igual
         {
             return await _dbSet
-                .Include(s => s.TournamentSponsors)
-                    .ThenInclude(ts => ts.Tournament)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.SponsorName == SponsorName);
+
+        }
+
+        
+        public async Task AddToTournamentAsync(int tournamentId, int sponsorId)
+        {
+            var tournamentSponsor = new TournamentSponsor
+            {
+                TournamentId = tournamentId,
+                SponsorId = sponsorId,
+                JoinedAt = DateTime.UtcNow
+            };
+            await _context.TournamentSponsors.AddAsync(tournamentSponsor);
+            await _context.SaveChangesAsync();
         }
     }
 }

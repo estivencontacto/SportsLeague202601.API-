@@ -1,13 +1,22 @@
-﻿namespace SportsLeague.Domain.Enums
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SportsLeague.Domain.Enums
 {
     public enum PlayerPosition
 
     {
 
         Goalkeeper = 0,
+
         Defender = 1,
+
         Midfielder = 2,
-        Forward = 3
+
+        Forward = 3,
+
+        Manager=4
 
     }
 }

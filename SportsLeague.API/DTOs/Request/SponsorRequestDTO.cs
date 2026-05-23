@@ -1,24 +1,16 @@
-﻿using SportsLeague.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
+using SportsLeague.Domain.Enums;
 
-namespace SportsLeague.API.DTOs.Request;
-
-public class SponsorRequestDTO
+namespace SportsLeague.API.DTOs.Request
 {
-    [Required]
-    [StringLength(200)]
-    public string Name { get; set; } = string.Empty;
+    public class SponsorRequestDTO
+    {
+        
+        public string SponsorName { get; set; } = string.Empty;
+        public string ContactEmail { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? WebSiteURl { get; set; }
 
-    [Required]
-    [EmailAddress]
-    public string ContactEmail { get; set; } = string.Empty;
+        public SponsorCategory Category { get; set; }
 
-    [Phone]
-    public string? Phone { get; set; }
-
-    [Url]
-    public string? WebsiteUrl { get; set; }
-
-    [Required]
-    public SponsorCategory Category { get; set; }
+    }
 }

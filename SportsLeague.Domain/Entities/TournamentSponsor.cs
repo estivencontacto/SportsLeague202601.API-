@@ -1,24 +1,21 @@
-﻿namespace SportsLeague.Domain.Entities
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SportsLeague.Domain.Entities
 {
-    // Tabla intermedia para la relación N:M entre Tournament y Sponsor
-    public class TournamentSponsor : AuditBase
+    public class TournamentSponsor:AuditBase//Creamos la clase sponsor con los atributos de la auditbase
     {
-        // Id del torneo
         public int TournamentId { get; set; }
-
-        // Id del sponsor
         public int SponsorId { get; set; }
+        public decimal ContractAmount { get; set; } 
 
-        // Valor del contrato entre sponsor y torneo
-        public decimal ContractAmount { get; set; }
+        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
-        // Fecha en la que el sponsor se vinculó al torneo
-        public DateTime JoinedAt { get; set; }
 
-        // Navegación hacia Tournament
+        //Agregamos propiedades de navegacion
+        public Sponsor Sponsor { get; set; } = null!;
         public Tournament Tournament { get; set; } = null!;
 
-        // Navegación hacia Sponsor
-        public Sponsor Sponsor { get; set; } = null!;
     }
 }

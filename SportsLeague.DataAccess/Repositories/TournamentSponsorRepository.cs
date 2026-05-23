@@ -1,33 +1,24 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SportsLeague.DataAccess.Context;
 using SportsLeague.Domain.Entities;
+using SportsLeague.Domain.Enums;
 using SportsLeague.Domain.Interfaces.Repositories;
-
-namespace SportsLeague.DataAccess.Repositories;
-
-public class TournamentSponsorRepository : GenericRepository<TournamentSponsor>, ITournamentSponsorRepository
+namespace SportsLeague.DataAccess.Repositories
 {
-    public TournamentSponsorRepository(LeagueDbContext context) : base(context)
+    public class TournamentSponsorRepository : GenericRepository<TournamentSponsor>, ITournamentSponsorRepository//Implementamos el repository con los metodos del generic y del ITournamentSponsor
     {
-    }
+        public TournamentSponsorRepository(LeagueDbContext context) : base(context)
+        {
+        }
 
-    public async Task<TournamentSponsor?> GetByTournamentAndSponsorAsync(int tournamentId, int sponsorId)
-    {
-        return await _dbSet
-            .FirstOrDefaultAsync(ts => ts.TournamentId == tournamentId && ts.SponsorId == sponsorId);
-    }
+        public async Task<TournamentSponsor?> GetByTournamentAndSponsor(int tournamentId, int sponsorId)//logramos buscar por cualquiera de las dos ids
+        {
+            return await _dbSet
+                .Where(ts => ts.TournamentId == tournamentId && ts.SponsorId == sponsorId)
+                .FirstOrDefaultAsync();
+        }
 
-    public async Task<IEnumerable<TournamentSponsor>> GetBySponsorIdAsync(int sponsorId)
-    {
-        return await _dbSet
-            .Include(ts => ts.Tournament)
-            .Where(ts => ts.SponsorId == sponsorId)
-            .ToListAsync();
-    }
-
-    public async Task<bool> ExistsAsync(int tournamentId, int sponsorId)
-    {
-        return await _dbSet
-            .AnyAsync(ts => ts.TournamentId == tournamentId && ts.SponsorId == sponsorId);
+        
     }
 }
+

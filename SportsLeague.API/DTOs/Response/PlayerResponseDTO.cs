@@ -1,4 +1,4 @@
-﻿using SportsLeague.Domain.Enums;
+using SportsLeague.Domain.Enums;
 
 namespace SportsLeague.API.DTOs.Response
 {

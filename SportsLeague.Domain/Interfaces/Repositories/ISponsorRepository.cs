@@ -1,15 +1,12 @@
-﻿using SportsLeague.Domain.Entities;
+using SportsLeague.Domain.Entities;
 
 namespace SportsLeague.Domain.Interfaces.Repositories
-{
-    // Define operaciones específicas para Sponsor
-    // Extiende el repositorio genérico
-    public interface ISponsorRepository : IGenericRepository<Sponsor>
+{ 
+    public interface ISponsorRepository : IGenericRepository<Sponsor>// creo el IRepository donde hereda los metodos del generic 
     {
-        // Verifica si ya existe un sponsor con el mismo nombre
-        Task<bool> ExistsByNameAsync(string name, int? excludeId = null);
-
-        // Obtiene un sponsor junto con sus torneos asociados
-        Task<Sponsor?> GetSponsorWithTournamentsAsync(int id);
+        Task<Sponsor?> ExistByNameAsync(string SponsorName);//para ver si es repetido el nombre del sponsor 
+        
+        
+        Task AddToTournamentAsync(int tournamentId, int sponsorId);
     }
 }

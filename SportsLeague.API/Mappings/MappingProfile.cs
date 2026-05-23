@@ -1,62 +1,129 @@
-﻿using AutoMapper;
+using AutoMapper;
 using SportsLeague.API.DTOs.Request;
 using SportsLeague.API.DTOs.Response;
 using SportsLeague.Domain.Entities;
 
-
-namespace SportsLeague.API.Mappings;
-
-public class MappingProfile : Profile
-
+namespace SportsLeague.API.Mappings
 {
-
-    public MappingProfile()
+    public class MappingProfile : Profile
 
     {
 
-        // Team mappings
+        public MappingProfile()
 
-        CreateMap<TeamRequestDTO, Team>();
-        CreateMap<Team, TeamResponseDTO>();
+        {
 
+            // Team mappings
 
-        // Player mappings
+            CreateMap<TeamRequestDTO, Team>();
 
-        CreateMap<PlayerRequestDTO, Player>();
-        CreateMap<Player, PlayerResponseDTO>()
+            CreateMap<Team, TeamResponseDTO>();
+            // Player mappings
+
+            CreateMap<PlayerRequestDTO, Player>();
+
+            CreateMap<Player, PlayerResponseDTO>()
+
             .ForMember(
-                 dest => dest.TeamName,
-                 opt => opt.MapFrom(src => src.Team.Name));
-        // Referee mappings
-        CreateMap<RefereeRequestDTO, Referee>();
-        CreateMap<Referee, RefereeResponseDTO>();
 
-        // Tournament mappings
-        CreateMap<TournamentRequestDTO, Tournament>();
-        CreateMap<Tournament, TournamentResponseDTO>()
+            dest => dest.TeamName,
+
+            opt => opt.MapFrom(src => src.Team.Name));
+            // Referee mappings
+
+            CreateMap<RefereeRequestDTO, Referee>();
+
+            CreateMap<Referee, RefereeResponseDTO>();
+            // Tournament mappings
+
+            CreateMap<TournamentRequestDTO, Tournament>();
+
+            CreateMap<Tournament, TournamentResponseDTO>()
+
             .ForMember(
-                dest => dest.TeamsCount,
-                opt => opt.MapFrom(src =>
-                    src.TournamentTeams != null ? src.TournamentTeams.Count : 0)); // CONDICION TERNARIA
 
-        CreateMap<SponsorRequestDTO, Sponsor>();
-        CreateMap<Sponsor, SponsorResponseDTO>();
+            dest => dest.TeamsCount,
 
-        // ==================== TOURNAMENT SPONSOR MAPPINGS ====================
-        CreateMap<TournamentSponsorRequestDTO, TournamentSponsor>()
-            .ForMember(dest => dest.JoinedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-            .ForMember(dest => dest.Tournament, opt => opt.Ignore())
-            .ForMember(dest => dest.Sponsor, opt => opt.Ignore());
+            opt => opt.MapFrom(src =>
 
-        CreateMap<TournamentSponsor, TournamentSponsorResponseDTO>()
-            .ForMember(dest => dest.TournamentName,
-                opt => opt.MapFrom(src => src.Tournament != null ? src.Tournament.Name : string.Empty))
-            .ForMember(dest => dest.SponsorName,
-                opt => opt.MapFrom(src => src.Sponsor != null ? src.Sponsor.Name : string.Empty));
+            src.TournamentTeams != null ? src.TournamentTeams.Count : 0));
+
+            //Sponsor mappings
+            CreateMap<SponsorRequestDTO, Sponsor>();
+            CreateMap<Sponsor, SponsorResponseDTO>()
+                .ForMember(dest => dest.TournamentId, opt => opt.MapFrom(src =>
+                    src.tournamentSponsors
+                        .Select(ts => ts.TournamentId)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.TournamentName, opt => opt.MapFrom(src =>
+                    src.tournamentSponsors
+                        .Where(ts => ts.Tournament != null)
+                        .Select(ts => ts.Tournament!.Name)
+                        .FirstOrDefault() ?? string.Empty));
+            CreateMap<MatchRequestDTO, Match>();
+            CreateMap<Match, MatchResponseDTO>()
+                .ForMember(dest => dest.TournamentName,
+                    opt => opt.MapFrom(src => src.Tournament.Name))
+                .ForMember(dest => dest.HomeTeamName,
+                    opt => opt.MapFrom(src => src.HomeTeam.Name))
+                .ForMember(dest => dest.AwayTeamName,
+                    opt => opt.MapFrom(src => src.AwayTeam.Name))
+                .ForMember(dest => dest.RefereeFullName,
+                    opt => opt.MapFrom(src =>
+                        src.Referee.FirstName + " " + src.Referee.LastName));
+            // MatchResult mappings 
+
+            CreateMap<MatchResultRequestDTO, MatchResult>();
+
+            CreateMap<MatchResult, MatchResultResponseDTO>();
+
+
+
+            // Goal mappings 
+
+            CreateMap<GoalRequestDTO, Goal>();
+
+            CreateMap<Goal, GoalResponseDTO>()
+
+                .ForMember(dest => dest.PlayerName,
+
+                    opt => opt.MapFrom(src =>
+
+                        src.Player.FirstName + " " + src.Player.LastName));
+
+
+
+            // Card mappings 
+
+            CreateMap<CardRequestDTO, Card>();
+
+            CreateMap<Card, CardResponseDTO>()
+
+                .ForMember(dest => dest.PlayerName,
+
+                    opt => opt.MapFrom(src =>
+
+                        src.Player.FirstName + " " + src.Player.LastName));
+
+            //MatchLineup Mappings
+
+            CreateMap<CreateMatchLineupDTO, MatchLineup>();
+            CreateMap<MatchLineup, MatchLineupDTO>()
+                .ForMember(dest => dest.PlayerName, opt => opt.MapFrom(src =>
+                    src.Player.FirstName + " " + src.Player.LastName))
+                .ForMember(dest => dest.TeamName, opt => opt.MapFrom(src => src.Player.Team.Name))
+                .ForMember(dest => dest.Position, opt => opt.MapFrom(src => src.Position));
+
+
+
+
+
+
+
+
+
+
+        }
+
     }
- }
-
-
+}

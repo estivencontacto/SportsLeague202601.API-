@@ -1,29 +1,18 @@
-﻿using SportsLeague.Domain.Enums;
+using SportsLeague.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace SportsLeague.Domain.Entities
 {
-    // Representa un patrocinador dentro del sistema
-    // Hereda de AuditBase para manejar Id, CreatedAt y UpdatedAt
-    public class Sponsor : AuditBase
+    public class Sponsor : AuditBase// creamos la clase sponsor
     {
-        // Nombre del patrocinador (ej: Nike, Adidas)
-        public string Name { get; set; } = string.Empty;
+        public string SponsorName { get; set; } = String.Empty;
+        public string ContactEmail { get; set; } = String.Empty;
+        public string? Phone { get; set; } 
+        public string? WebSiteURl { get; set; }
+        public SponsorCategory Category { get; set; } //hacemos el enlace con los enums de la categoria
 
-        // Correo de contacto principal
-        public string ContactEmail { get; set; } = string.Empty;
-
-        // Teléfono opcional
-        public string? Phone { get; set; }
-
-        // Página web opcional
-        public string? WebsiteUrl { get; set; }
-
-        // Categoría del sponsor (Main, Gold, etc.)
-        public SponsorCategory Category { get; set; }
-
-        // Relación muchos a muchos con torneos
-        // Un sponsor puede participar en varios torneos
-        public ICollection<TournamentSponsor> TournamentSponsors { get; set; }
-            = new List<TournamentSponsor>();
+        public ICollection<TournamentSponsor> tournamentSponsors { get; set; } = new List<TournamentSponsor>();//agregamos las navegation properties adecuadas
     }
 }

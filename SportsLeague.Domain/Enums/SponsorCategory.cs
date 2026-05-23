@@ -1,11 +1,15 @@
-﻿namespace SportsLeague.Domain.Enums
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SportsLeague.Domain.Enums
 {
-    // Define los niveles de patrocinio dentro del sistema
     public enum SponsorCategory
     {
-        Main = 0,   // Sponsor principal (mayor inversión)
-        Gold = 1,   // Nivel alto
-        Silver = 2, // Nivel medio
-        Bronze = 3  // Nivel básico
+        Main = 0,
+        second= 1,
+        third= 2,
+        fourth= 3,
+
     }
 }

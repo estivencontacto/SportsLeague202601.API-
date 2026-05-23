@@ -1,106 +1,120 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using SportsLeague.Domain.Entities;
+using SportsLeague.Domain.Enums;
 using SportsLeague.Domain.Interfaces.Repositories;
 using SportsLeague.Domain.Interfaces.Services;
 
-namespace SportsLeague.Domain.Services
+namespace SportsLeague.Domain.Services;
+
+public class SponsorService : ISponsorService
 {
-    public class SponsorService : ISponsorService
+    private readonly ISponsorRepository _sponsorRepository;
+    private readonly ITournamentRepository _tournamentRepository;
+    private readonly ITournamentSponsorRepository _tournamentSponsorRepository;
+    private readonly ILogger<SponsorService> _logger;
+
+    public SponsorService(
+        ISponsorRepository sponsorRepository,
+        ITournamentRepository tournamentRepository,
+        ITournamentSponsorRepository tournamentSponsorRepository,
+        ILogger<SponsorService> logger)
     {
-        private readonly ISponsorRepository _sponsorRepo;
-        private readonly ITournamentSponsorRepository _linkRepo;
-        private readonly ITournamentRepository _tournamentRepo;
-        private readonly ILogger<SponsorService> _logger;
+        _sponsorRepository = sponsorRepository;
+        _tournamentRepository = tournamentRepository;
+        _tournamentSponsorRepository = tournamentSponsorRepository;
+        _logger = logger;
+    }
 
-        public SponsorService(
-            ISponsorRepository sponsorRepo,
-            ITournamentSponsorRepository linkRepo,
-            ITournamentRepository tournamentRepo,
-            ILogger<SponsorService> logger)
-        {
-            _sponsorRepo = sponsorRepo;
-            _linkRepo = linkRepo;
-            _tournamentRepo = tournamentRepo;
-            _logger = logger;
-        }
+    public async Task<IEnumerable<Sponsor>> GetAllAsync()
+    {
+        _logger.LogInformation("Retrieving all sponsors");
+        return await _sponsorRepository.GetAllAsync();
+    }
 
-        public async Task<IEnumerable<Sponsor>> GetAllAsync()
-        {
-            return await _sponsorRepo.GetAllAsync();
-        }
+    public async Task<Sponsor?> GetByIdAsync(int id)
+    {
+        _logger.LogInformation("Retrieving sponsor with ID {SponsorId}", id);
+        return await _sponsorRepository.GetByIdAsync(id);
+    }
 
-        public async Task<Sponsor?> GetByIdAsync(int id)
-        {
-            return await _sponsorRepo.GetSponsorWithTournamentsAsync(id);
-        }
+    public async Task<Sponsor> CreateAsync(Sponsor sponsor)
+    {
+        await EnsureSponsorNameIsAvailableAsync(sponsor.SponsorName);
 
-        public async Task<Sponsor> AddAsync(Sponsor sponsor)
-        {
-            if (await _sponsorRepo.ExistsByNameAsync(sponsor.Name))
-                throw new InvalidOperationException("Sponsor already exists");
+        sponsor.SponsorName = sponsor.SponsorName.Trim();
+        sponsor.ContactEmail = sponsor.ContactEmail.Trim();
+        sponsor.Phone = sponsor.Phone?.Trim();
+        sponsor.WebSiteURl = sponsor.WebSiteURl?.Trim();
 
-            sponsor.CreatedAt = DateTime.UtcNow;
+        _logger.LogInformation("Creating sponsor {SponsorName}", sponsor.SponsorName);
+        return await _sponsorRepository.CreateAsync(sponsor);
+    }
 
-            return await _sponsorRepo.AddAsync(sponsor);
-        }
+    public async Task UpdateAsync(int id, Sponsor sponsor)
+    {
+        var existing = await _sponsorRepository.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"No se encontro el sponsor con ID {id}");
 
-        public async Task UpdateAsync(int id, Sponsor updated)
-        {
-            var existing = await _sponsorRepo.GetByIdAsync(id);
+        var duplicatedName = await _sponsorRepository.ExistByNameAsync(sponsor.SponsorName);
+        if (duplicatedName != null && duplicatedName.Id != id)
+            throw new InvalidOperationException($"Ya existe un sponsor con el nombre {sponsor.SponsorName}");
 
-            if (existing == null)
-                throw new KeyNotFoundException("Sponsor not found");
+        existing.SponsorName = sponsor.SponsorName.Trim();
+        existing.ContactEmail = sponsor.ContactEmail.Trim();
+        existing.Phone = sponsor.Phone?.Trim();
+        existing.WebSiteURl = sponsor.WebSiteURl?.Trim();
+        existing.Category = sponsor.Category;
 
-            existing.Name = updated.Name;
-            existing.ContactEmail = updated.ContactEmail;
-            existing.Phone = updated.Phone;
-            existing.WebsiteUrl = updated.WebsiteUrl;
-            existing.Category = updated.Category;
-            existing.UpdatedAt = DateTime.UtcNow;
+        _logger.LogInformation("Updating sponsor {SponsorId}", id);
+        await _sponsorRepository.UpdateAsync(existing);
+    }
 
-            await _sponsorRepo.UpdateAsync(existing);
-        }
+    public async Task DeleteAsync(int id)
+    {
+        var exists = await _sponsorRepository.ExistsAsync(id);
+        if (!exists)
+            throw new KeyNotFoundException($"No se encontro el sponsor con ID {id}");
 
-        public async Task DeleteAsync(int id)
-        {
-            if (!await _sponsorRepo.ExistsAsync(id))
-                throw new KeyNotFoundException("Sponsor not found");
+        _logger.LogInformation("Deleting sponsor {SponsorId}", id);
+        await _sponsorRepository.DeleteAsync(id);
+    }
 
-            await _sponsorRepo.DeleteAsync(id);
-        }
+    public async Task UpdateCategoryAsync(int id, SponsorCategory newCategory)
+    {
+        var sponsor = await _sponsorRepository.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"No se encontro el sponsor con ID {id}");
 
-        public async Task<TournamentSponsor> LinkToTournamentAsync(int sponsorId, int tournamentId, decimal amount)
-        {
-            var sponsor = await _sponsorRepo.GetByIdAsync(sponsorId);
-            var tournament = await _tournamentRepo.GetByIdAsync(tournamentId);
+        sponsor.Category = newCategory;
 
-            if (sponsor == null || tournament == null)
-                throw new KeyNotFoundException("Sponsor or Tournament not found");
+        _logger.LogInformation("Updating sponsor {SponsorId} category to {Category}", id, newCategory);
+        await _sponsorRepository.UpdateAsync(sponsor);
+    }
 
-            var link = new TournamentSponsor
-            {
-                SponsorId = sponsorId,
-                TournamentId = tournamentId,
-                ContractAmount = amount,
-                JoinedAt = DateTime.UtcNow
-            };
+    public async Task AddToTournamentAsync(int tournamentId, int sponsorId)
+    {
+        var sponsorExists = await _sponsorRepository.ExistsAsync(sponsorId);
+        if (!sponsorExists)
+            throw new KeyNotFoundException($"No se encontro el sponsor con ID {sponsorId}");
 
-            return await _linkRepo.AddAsync(link);
-        }
+        var tournamentExists = await _tournamentRepository.ExistsAsync(tournamentId);
+        if (!tournamentExists)
+            throw new KeyNotFoundException($"No se encontro el torneo con ID {tournamentId}");
 
-        public async Task<IEnumerable<TournamentSponsor>> GetSponsorTournamentsAsync(int sponsorId)
-        {
-            return await _linkRepo.GetBySponsorIdAsync(sponsorId);
-        }
+        var existingRelation = await _tournamentSponsorRepository
+            .GetByTournamentAndSponsor(tournamentId, sponsorId);
+        if (existingRelation != null)
+            throw new InvalidOperationException(
+                $"El sponsor {sponsorId} ya esta asociado al torneo {tournamentId}");
 
-        public async Task UnlinkFromTournamentAsync(int sponsorId, int tournamentId)
-        {
-            var link = await _linkRepo.GetByTournamentAndSponsorAsync(tournamentId, sponsorId);
+        await _sponsorRepository.AddToTournamentAsync(tournamentId, sponsorId);
+        _logger.LogInformation(
+            "Sponsor {SponsorId} added to tournament {TournamentId}", sponsorId, tournamentId);
+    }
 
-            if (link == null)
-                throw new KeyNotFoundException("Relation not found");
-
-            await _linkRepo.DeleteAsync(link.Id);
-        }
+    private async Task EnsureSponsorNameIsAvailableAsync(string sponsorName)
+    {
+        var existing = await _sponsorRepository.ExistByNameAsync(sponsorName);
+        if (existing != null)
+            throw new InvalidOperationException($"Ya existe un sponsor con el nombre {sponsorName}");
     }
 }
