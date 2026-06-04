@@ -1,0 +1,18 @@
+<mat-toolbar class="app-toolbar">
+  <span class="brand">Sports League</span>
+  <nav class="main-nav" aria-label="Navegacion principal">
+    @for (link of links; track link.path) {
+      <a mat-button [routerLink]="link.path" routerLinkActive="active-link">
+        {{ link.label }}
+      </a>
+    }
+  </nav>
+  <span class="toolbar-spacer"></span>
+  <a mat-button href="http://localhost:5105/swagger/index.html" target="_blank" rel="noopener">
+    Swagger
+  </a>
+</mat-toolbar>
+
+<main class="page-shell">
+  <router-outlet />
+</main>

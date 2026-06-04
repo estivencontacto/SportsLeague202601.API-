@@ -1,0 +1,87 @@
+<section class="feature-page">
+  <div class="page-header">
+    <div>
+      <h1>Equipos</h1>
+      <p>Gestiona los equipos base de la liga.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="loadTeams()">Actualizar</button>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ selectedId() ? 'Editar equipo' : 'Nuevo equipo' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <mat-form-field>
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="name" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Ciudad</mat-label>
+            <input matInput formControlName="city" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Estadio</mat-label>
+            <input matInput formControlName="stadium" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Logo URL</mat-label>
+            <input matInput formControlName="logoUrl" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Fecha de fundacion</mat-label>
+            <input matInput type="date" formControlName="foundedDate" />
+          </mat-form-field>
+        </div>
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit">Guardar</button>
+          <button mat-button type="button" (click)="resetForm()">Limpiar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Listado</mat-card-title>
+      <mat-card-subtitle>{{ teams().length }} equipos registrados</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      @if (teams().length > 0) {
+        <div class="table-wrapper">
+          <table mat-table [dataSource]="teams()">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Equipo</th>
+              <td mat-cell *matCellDef="let team">{{ team.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="city">
+              <th mat-header-cell *matHeaderCellDef>Ciudad</th>
+              <td mat-cell *matCellDef="let team">{{ team.city }}</td>
+            </ng-container>
+            <ng-container matColumnDef="stadium">
+              <th mat-header-cell *matHeaderCellDef>Estadio</th>
+              <td mat-cell *matCellDef="let team">{{ team.stadium }}</td>
+            </ng-container>
+            <ng-container matColumnDef="foundedDate">
+              <th mat-header-cell *matHeaderCellDef>Fundacion</th>
+              <td mat-cell *matCellDef="let team">{{ team.foundedDate | date: 'yyyy' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Acciones</th>
+              <td mat-cell *matCellDef="let team">
+                <button mat-button type="button" (click)="edit(team)">Editar</button>
+                <button mat-button color="warn" type="button" (click)="delete(team)">Eliminar</button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      } @else {
+        <p class="empty-message">No hay equipos registrados.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>

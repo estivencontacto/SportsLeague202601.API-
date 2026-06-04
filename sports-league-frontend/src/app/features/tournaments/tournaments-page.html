@@ -1,0 +1,133 @@
+<section class="feature-page">
+  <div class="page-header">
+    <div>
+      <h1>Torneos</h1>
+      <p>Crea temporadas y administra el calendario competitivo.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="loadTournaments()">Actualizar</button>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ selectedId() ? 'Editar torneo' : 'Nuevo torneo' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <mat-form-field>
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="name" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Temporada</mat-label>
+            <input matInput formControlName="season" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Fecha inicio</mat-label>
+            <input matInput type="date" formControlName="startDate" />
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Fecha fin</mat-label>
+            <input matInput type="date" formControlName="endDate" />
+          </mat-form-field>
+        </div>
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit">Guardar</button>
+          <button mat-button type="button" (click)="resetForm()">Limpiar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Listado</mat-card-title>
+      <mat-card-subtitle>{{ tournaments().length }} torneos registrados</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      @if (tournaments().length > 0) {
+        <div class="table-wrapper">
+          <table mat-table [dataSource]="tournaments()">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Torneo</th>
+              <td mat-cell *matCellDef="let tournament">{{ tournament.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="season">
+              <th mat-header-cell *matHeaderCellDef>Temporada</th>
+              <td mat-cell *matCellDef="let tournament">{{ tournament.season }}</td>
+            </ng-container>
+            <ng-container matColumnDef="dates">
+              <th mat-header-cell *matHeaderCellDef>Fechas</th>
+              <td mat-cell *matCellDef="let tournament">
+                {{ tournament.startDate | date: 'dd/MM/yyyy' }} - {{ tournament.endDate | date: 'dd/MM/yyyy' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let tournament">{{ getStatusLabel(tournament.status) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="teamsCount">
+              <th mat-header-cell *matHeaderCellDef>Equipos</th>
+              <td mat-cell *matCellDef="let tournament">{{ tournament.teamsCount }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Acciones</th>
+              <td mat-cell *matCellDef="let tournament">
+                <button mat-button type="button" (click)="edit(tournament)">Editar</button>
+                <button mat-button color="warn" type="button" (click)="delete(tournament)">Eliminar</button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      } @else {
+        <p class="empty-message">No hay torneos registrados.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Equipos del torneo</mat-card-title>
+      <mat-card-subtitle>Inscripcion y consulta por torneo</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="registerForm" (ngSubmit)="registerTeam()">
+        <div class="form-grid">
+          <mat-form-field>
+            <mat-label>Torneo</mat-label>
+            <mat-select formControlName="tournamentId" (selectionChange)="loadTournamentTeams($event.value)">
+              <mat-option [value]="0">Seleccione</mat-option>
+              @for (tournament of tournaments(); track tournament.id) {
+                <mat-option [value]="tournament.id">{{ tournament.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Equipo</mat-label>
+            <mat-select formControlName="teamId">
+              <mat-option [value]="0">Seleccione</mat-option>
+              @for (team of teams(); track team.id) {
+                <mat-option [value]="team.id">{{ team.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit">Inscribir equipo</button>
+        </div>
+      </form>
+
+      @if (tournamentTeams().length > 0) {
+        <div class="module-list">
+          @for (team of tournamentTeams(); track team.id) {
+            <span>{{ team.name }} - {{ team.city }}</span>
+          }
+        </div>
+      } @else {
+        <p class="empty-message">Selecciona un torneo para ver sus equipos inscritos.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>

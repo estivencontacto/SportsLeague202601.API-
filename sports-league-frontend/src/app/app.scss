@@ -1,0 +1,45 @@
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  gap: 18px;
+  border-bottom: 1px solid #d7dee8;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.brand {
+  font-weight: 600;
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.main-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.active-link {
+  background: #e8f0fe;
+}
+
+.page-shell {
+  min-height: calc(100dvh - 64px);
+  padding: 32px;
+  background: #f4f7fb;
+}
+
+@media (max-width: 860px) {
+  .app-toolbar {
+    height: auto;
+    align-items: flex-start;
+    padding-block: 10px;
+  }
+
+  .page-shell {
+    padding: 20px;
+  }
+}

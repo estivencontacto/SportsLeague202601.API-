@@ -1,0 +1,108 @@
+<section class="feature-page">
+  <div class="page-header">
+    <div>
+      <h1>Alineaciones</h1>
+      <p>Consulta y registra titulares o suplentes por partido.</p>
+    </div>
+    <button mat-stroked-button type="button" (click)="loadInitialData()">Actualizar catalogos</button>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Registrar jugador</mat-card-title>
+      <mat-card-subtitle>La edicion no aparece porque el backend solo expone crear, consultar y eliminar.</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="addPlayer()">
+        <div class="form-grid">
+          <mat-form-field>
+            <mat-label>Torneo</mat-label>
+            <mat-select formControlName="tournamentId" (selectionChange)="loadMatches($event.value)">
+              <mat-option [value]="0">Seleccione</mat-option>
+              @for (tournament of tournaments(); track tournament.id) {
+                <mat-option [value]="tournament.id">{{ tournament.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Partido</mat-label>
+            <mat-select formControlName="matchId" (selectionChange)="loadLineup($event.value)">
+              <mat-option [value]="0">Seleccione</mat-option>
+              @for (match of matches(); track match.id) {
+                <mat-option [value]="match.id">{{ match.homeTeamName }} vs {{ match.awayTeamName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Jugador</mat-label>
+            <mat-select formControlName="playerId">
+              <mat-option [value]="0">Seleccione</mat-option>
+              @for (player of players(); track player.id) {
+                <mat-option [value]="player.id">{{ player.firstName }} {{ player.lastName }} - {{ player.teamName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Posicion</mat-label>
+            <mat-select formControlName="position">
+              @for (position of positions; track position) {
+                <mat-option [value]="position">{{ position }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Tipo</mat-label>
+            <mat-select formControlName="isStarter">
+              <mat-option [value]="true">Titular</mat-option>
+              <mat-option [value]="false">Suplente</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit">Agregar a alineacion</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Alineacion del partido</mat-card-title>
+      <mat-card-subtitle>{{ lineup().length }} jugadores registrados</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      @if (lineup().length > 0) {
+        <div class="table-wrapper">
+          <table mat-table [dataSource]="lineup()">
+            <ng-container matColumnDef="playerName">
+              <th mat-header-cell *matHeaderCellDef>Jugador</th>
+              <td mat-cell *matCellDef="let row">{{ row.playerName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="teamName">
+              <th mat-header-cell *matHeaderCellDef>Equipo</th>
+              <td mat-cell *matCellDef="let row">{{ row.teamName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="position">
+              <th mat-header-cell *matHeaderCellDef>Posicion</th>
+              <td mat-cell *matCellDef="let row">{{ row.position }}</td>
+            </ng-container>
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Tipo</th>
+              <td mat-cell *matCellDef="let row">{{ row.isStarter ? 'Titular' : 'Suplente' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Acciones</th>
+              <td mat-cell *matCellDef="let row">
+                <button mat-button color="warn" type="button" (click)="deleteLineup(row)">Eliminar</button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      } @else {
+        <p class="empty-message">Selecciona un partido para consultar su alineacion.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>
